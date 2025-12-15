@@ -1,5 +1,7 @@
 function hD = ChanEstimate_1Tx(prmLTE, Rx, Ref, Mode)
 %#codegen
+%#codegen1
+%#codegen2
 Nrb           = prmLTE.Nrb;     % Number of resource blocks
 Nrb_sc      = prmLTE.Nrb_sc;                 % 12 for normal mode
 Ndl_symb = prmLTE.Ndl_symb;        % 7    for normal mode
