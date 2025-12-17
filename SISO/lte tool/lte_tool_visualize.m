@@ -50,9 +50,19 @@ end
 
 %% Channel Impulse Response
 subplot(2,3,5);
-if isfield(channelSpec, 'pathGains')
+if isfield(channelSpec, 'pathGains') && ~isempty(channelSpec.pathGains)
     % The impulse response is represented by the path gains in the fading channel model
-    stem(abs(channelSpec.pathGains(1,:)));
+    % PathGains is typically [NumSamples x NumPaths] for SISO
+    % Handle various dimensionalities for robustness
+    pg = channelSpec.pathGains;
+    if ismatrix(pg) && size(pg, 1) > 1
+        % 2-D: take first time instant (first row)
+        pathMag = abs(pg(1, :));
+    else
+        % 1-D or single row: use as-is
+        pathMag = abs(pg(:)).';
+    end
+    stem(pathMag);
     title('Estimated Channel Impulse Response');
     xlabel('Path Index');
     ylabel('Magnitude');

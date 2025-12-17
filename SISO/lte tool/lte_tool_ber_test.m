@@ -44,6 +44,9 @@ for idx = 1:length(snrValues)
     snr = snrValues(idx);
     fprintf('Testing SNR = %d dB...\n', snr);
 
+    % Reset channel state for independent/repeatable results at each SNR point
+    clear lte_tool_apply_channel;
+
     % Initialize error rate calculator for this SNR point
     hPBer = comm.ErrorRate;
     Measures = zeros(3,1); % [BER, Errors, TotalBits]

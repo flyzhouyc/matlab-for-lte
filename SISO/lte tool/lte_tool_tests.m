@@ -51,10 +51,12 @@ classdef lte_tool_tests < matlab.unittest.TestCase
         
         % Test the main step function for a single subframe execution
         function testStepFunction(testCase)
+            % Reset channel state for independent/repeatable test results
+            clear lte_tool_apply_channel;
             [rmc, trBlkSize] = lte_tool_configure(testCase.enb_valid, testCase.pdsch_valid, testCase.cRate_valid);
             dataIn = randi([0 1], trBlkSize, 1);
             snr = 20; % High SNR
-            
+
             [dataOut, crcError] = lte_tool_step(0, dataIn, rmc, snr, 'EPA 5Hz', testCase.cec_valid);
             
             % Verify output size and type
@@ -67,6 +69,8 @@ classdef lte_tool_tests < matlab.unittest.TestCase
             % This test simply confirms that the lte_tool_demo script runs to
             % completion without throwing an error. The 'evalc' suppresses
             % command window output.
+            % Reset channel state for independent/repeatable test results
+            clear lte_tool_apply_channel;
             % Set test mode flag to prevent clear/clc from interfering
             LTE_TOOL_TEST_MODE = true; %#ok<NASGU>
             testCase.verifyWarningFree(@() evalc('lte_tool_demo'), ...
