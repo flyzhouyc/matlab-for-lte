@@ -53,17 +53,20 @@ chanCfg.NRxAnts = 1;
 chanCfg.SamplingRate = samplingRate;
 
 % Use persistent state to track elapsed time for continuous fading
-persistent elapsedTime lastDelayProfile lastDopplerFreq lastSamplingRate;
+% and AWGN seed for reproducibility
+persistent elapsedTime lastDelayProfile lastDopplerFreq lastSamplingRate awgnSeedCounter;
 if isempty(elapsedTime)
     elapsedTime = 0;
+    awgnSeedCounter = 0;
     lastDelayProfile = delayProfile;
     lastDopplerFreq = dopplerFreq;
     lastSamplingRate = samplingRate;
 elseif ~strcmp(lastDelayProfile, delayProfile) || ...
        lastDopplerFreq ~= dopplerFreq || ...
        lastSamplingRate ~= samplingRate
-    % Configuration changed, reset elapsed time
+    % Configuration changed, reset state
     elapsedTime = 0;
+    awgnSeedCounter = 0;
     lastDelayProfile = delayProfile;
     lastDopplerFreq = dopplerFreq;
     lastSamplingRate = samplingRate;
@@ -80,8 +83,12 @@ fadingChannel = chanCfg; % Return channel configuration
 % Use size(,1) instead of numel() in case waveform is multi-column
 elapsedTime = elapsedTime + size(txWaveform, 1) / samplingRate;
 
-% Apply AWGN. The 'measured' flag ensures SNR is calculated based on
-% the signal power of rxFaded.
+% Apply AWGN with controlled RNG for reproducibility
+% Save current RNG state, seed with counter-based value, then restore
+rngState = rng;
+rng(74 + awgnSeedCounter); % Base seed 74, offset by call count
 rxWaveform = awgn(rxFaded, snrdB, 'measured');
+rng(rngState); % Restore RNG state to avoid side effects
+awgnSeedCounter = awgnSeedCounter + 1;
 
 end
