@@ -22,11 +22,19 @@ rmc.PDSCH.RNTI = pdsch.RNTI;
 rmc.PDSCH.NLayers = pdsch.NLayers;
 rmc.PDSCH.TxScheme = pdsch.TxScheme;
 
-% Get PDSCH info required for Transport Block Size (TBS) calculation
-pdschInfo = ltePDSCHInfo(rmc, rmc.PDSCH);
+% Get PDSCH indices and capacity info
+% ltePDSCHIndices returns indices and an info struct containing G (total coded bits)
+[~, pdschInfo] = ltePDSCHIndices(rmc, rmc.PDSCH);
+G = pdschInfo.G;  % Total coded bits capacity for PDSCH
 
-% Calculate a valid transport block size for the given parameters
-trBlkSize = lteTBS(rmc.NDLRB, pdschInfo.PRBSet, rmc.PDSCH.Modulation, rmc.PDSCH.NLayers, cRate);
+% Calculate target TBS based on capacity and code rate
+% Relationship: G ≈ TBS / cRate, so targetTBS ≈ G * cRate
+targetTBS = floor(G * cRate);
+
+% Find the nearest valid TBS from the TBS table
+% The number of PRBs allocated to PDSCH
+nPRB = numel(unique(pdschInfo.PRBSet));
+trBlkSize = findValidTBS(nPRB, targetTBS);
 
 % Assign the calculated size back to the RMC structure
 rmc.PDSCH.TrBlkSizes = trBlkSize;
@@ -49,4 +57,26 @@ function validate_params(enb, pdsch)
             'Invalid modulation: ''%s''. Must be one of [%s].', ...
             pdsch.Modulation, strjoin(validModulations, ', '));
     end
+end
+
+function tbs = findValidTBS(nPRB, targetTBS)
+%FINDVALIDTBS Find the nearest valid TBS from the LTE TBS table.
+%   TBS = FINDVALIDTBS(NPRB, TARGETTBS) searches the TBS table for the
+%   closest valid transport block size that is >= targetTBS.
+%
+%   NPRB is the number of Physical Resource Blocks allocated.
+%   TARGETTBS is the desired transport block size.
+%
+%   The TBS index (ITBS) ranges from 0 to 26 in the LTE standard.
+
+    % Search TBS table for the smallest TBS >= targetTBS
+    for itbs = 0:26
+        tbs = lteTBS(nPRB, itbs);
+        if tbs >= targetTBS
+            return;
+        end
+    end
+
+    % If no TBS found >= targetTBS, use the maximum available
+    tbs = lteTBS(nPRB, 26);
 end
