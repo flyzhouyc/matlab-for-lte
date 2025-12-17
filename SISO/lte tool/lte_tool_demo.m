@@ -8,7 +8,7 @@
 % >> lte_tool_demo
 
 %% Clear workspace and command window (skip if running in test context)
-if ~exist('LTE_TOOL_TEST_MODE', 'var')
+if ~(exist('LTE_TOOL_TEST_MODE', 'var') && LTE_TOOL_TEST_MODE)
     close all;
     clear;
     clc;

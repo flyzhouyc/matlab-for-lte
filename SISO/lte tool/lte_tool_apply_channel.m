@@ -77,7 +77,8 @@ chanCfg.InitTime = elapsedTime;
 fadingChannel = chanCfg; % Return channel configuration
 
 % Advance elapsed time for next call (waveform duration)
-elapsedTime = elapsedTime + numel(txWaveform) / samplingRate;
+% Use size(,1) instead of numel() in case waveform is multi-column
+elapsedTime = elapsedTime + size(txWaveform, 1) / samplingRate;
 
 % Apply AWGN. The 'measured' flag ensures SNR is calculated based on
 % the signal power of rxFaded.
