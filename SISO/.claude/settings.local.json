@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "WebFetch(domain:ww2.mathworks.cn)",
+      "WebSearch",
+      "Bash(ls:*)"
+    ]
+  }
+}
