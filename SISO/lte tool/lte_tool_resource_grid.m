@@ -11,17 +11,21 @@ function [grid] = lte_tool_resource_grid(rmc, subframe, pdschSymbols)
 %
 %   GRID is the populated resource grid.
 
+% Set subframe number in RMC structure for LTE Toolbox functions
+rmc.NSubframe = subframe;
+
 % Create empty grid
 grid = lteDLResourceGrid(rmc);
-    % Get PDSCH indices for the current subframe
-    pdschIndices = ltePDSCHIndices(rmc, rmc.PDSCH, subframe);
+    % Get PDSCH indices (requires: enb, chs, prbset; subframe is in rmc.NSubframe)
+    pdschIndices = ltePDSCHIndices(rmc, rmc.PDSCH, rmc.PDSCH.PRBSet);
 
     % Map PDSCH symbols to the grid
     grid(pdschIndices) = pdschSymbols;
 
     % Generate and get indices for cell-specific reference signals
-    csr = lteCellRS(rmc, subframe);
-    csrIndices = lteCellRSIndices(rmc, subframe);
+    % lteCellRS and lteCellRSIndices use NSubframe from the rmc structure
+    csr = lteCellRS(rmc);
+    csrIndices = lteCellRSIndices(rmc);
 
     % Map CSR symbols to the grid
     grid(csrIndices) = csr;

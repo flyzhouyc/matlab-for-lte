@@ -9,6 +9,9 @@ function [varargout] = lte_tool_step(subframe, dataIn, rmc, snrdB, chanMdl, cec)
 %   Syntax for visualization:
 %   [dataOut, crcError, txWaveform, rxWaveform, rxData, channelSpec] = lte_tool_step(...)
 
+%% Set subframe number in RMC structure for LTE Toolbox functions
+rmc.NSubframe = subframe;
+
 %% Transmitter
 % DL-SCH encoding
 codedBits = lteDLSCH(rmc, rmc.PDSCH, dataIn);
@@ -32,7 +35,8 @@ rxGrid = lteOFDMDemodulate(rmc, rxWaveform);
 [estChannelGrid, noiseEst] = lteDLChannelEstimate(rmc, cec, rxGrid);
 
 % PDSCH decoding
-pdschIndices = ltePDSCHIndices(rmc, rmc.PDSCH, subframe); % Get PDSCH indices for this subframe
+% ltePDSCHIndices requires: enb, chs, prbset (subframe is in rmc.NSubframe)
+pdschIndices = ltePDSCHIndices(rmc, rmc.PDSCH, rmc.PDSCH.PRBSet);
 rxPdschSymbols = lteExtractResources(pdschIndices, rxGrid);
 pdschChEst = lteExtractResources(pdschIndices, estChannelGrid);
 

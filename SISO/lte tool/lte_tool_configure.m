@@ -23,8 +23,9 @@ rmc.PDSCH.NLayers = pdsch.NLayers;
 rmc.PDSCH.TxScheme = pdsch.TxScheme;
 
 % Get PDSCH indices and capacity info
-% ltePDSCHIndices returns indices and an info struct containing G (total coded bits)
-[~, pdschInfo] = ltePDSCHIndices(rmc, rmc.PDSCH);
+% ltePDSCHIndices requires: enb, chs, prbset
+% PRBSet from lteRMCDL defines the PRB allocation for the RMC
+[~, pdschInfo] = ltePDSCHIndices(rmc, rmc.PDSCH, rmc.PDSCH.PRBSet);
 G = pdschInfo.G;  % Total coded bits capacity for PDSCH
 
 % Calculate target TBS based on capacity and code rate
