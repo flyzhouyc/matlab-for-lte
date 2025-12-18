@@ -13,8 +13,12 @@ function [varargout] = lte_tool_step(subframe, dataIn, rmc, snrdB, chanMdl, cec)
 rmc.NSubframe = subframe;
 
 %% Transmitter
+% Get PDSCH indices and info to determine codeword length
+[pdschIndices, pdschInfo] = ltePDSCHIndices(rmc, rmc.PDSCH, rmc.PDSCH.PRBSet);
+outlen = pdschInfo.G;  % Codeword length
+
 % DL-SCH encoding
-codedBits = lteDLSCH(rmc, rmc.PDSCH, dataIn);
+codedBits = lteDLSCH(rmc, rmc.PDSCH, outlen, dataIn);
 
 % PDSCH symbol generation
 pdschSymbols = ltePDSCH(rmc, rmc.PDSCH, codedBits);
@@ -34,9 +38,7 @@ rxGrid = lteOFDMDemodulate(rmc, rxWaveform);
 % Channel estimation using provided cec parameters
 [estChannelGrid, noiseEst] = lteDLChannelEstimate(rmc, cec, rxGrid);
 
-% PDSCH decoding
-% ltePDSCHIndices requires: enb, chs, prbset (subframe is in rmc.NSubframe)
-pdschIndices = ltePDSCHIndices(rmc, rmc.PDSCH, rmc.PDSCH.PRBSet);
+% PDSCH decoding (reuse pdschIndices from transmitter)
 rxPdschSymbols = lteExtractResources(pdschIndices, rxGrid);
 pdschChEst = lteExtractResources(pdschIndices, estChannelGrid);
 
@@ -44,6 +46,14 @@ rxEncodedBits = ltePDSCHDecode(rmc, rmc.PDSCH, rxPdschSymbols, pdschChEst, noise
 
 % DL-SCH decoding
 [dataOut, crcError] = lteDLSCHDecode(rmc, rmc.PDSCH, numel(dataIn), rxEncodedBits);
+
+% Extract from cell array and convert to double to match dataIn type
+% (lteDLSCHDecode returns cell array of int8 when input is cell array)
+if iscell(dataOut)
+    dataOut = double(dataOut{1});
+else
+    dataOut = double(dataOut);
+end
 
 %% Output Arguments
 % The output depends on the number of arguments requested by the caller (nargout)
